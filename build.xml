@@ -1,0 +1,47 @@
+<project name="SeeUV" default="compile">
+	<target name="clean">
+		<delete dir="build"/>
+		<delete dir="dist"/>
+	</target>
+
+	<target name="compile" depends="clean">
+		<mkdir dir="build"/>
+		<javac
+			source="1.5"
+			target="1.5"
+			srcdir="src/"
+			destdir="build"
+			debug="on"
+			debuglevel="lines,vars,source"
+			includeantruntime="false"
+			deprecation="on"
+		>
+			<classpath>
+				<pathelement location="lib/lwjgl.jar"/>
+			</classpath>
+			<compilerarg value="-Xlint:-serial"/>
+			<compilerarg value="-Xbootclasspath:/res/1.5/rt.jar"/>
+		</javac>
+		<mkdir dir="dist"/>
+		<jar destfile="dist/SeeUV.jar">
+			<fileset    dir="build/" />
+			<zipfileset src="lib/lwjgl.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="SeeUV"/>
+			</manifest>
+		</jar>
+		<copy todir="dist/native">
+			<fileset dir="lib/native/linux"/>
+			<fileset dir="lib/native/macosx"/>
+			<fileset dir="lib/native/windows"/>
+		</copy>
+	</target>
+
+	<target name="run" depends="compile">
+		<java classname="SeeUV" fork="true" dir="dist">
+			<classpath>
+				<pathelement location="dist/SeeUV.jar"/>
+			</classpath>
+		</java>
+	</target>
+</project>
