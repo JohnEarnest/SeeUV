@@ -40,7 +40,7 @@
 				<pathelement location="dist/SeeUV.jar"/>
 			</classpath>
 			<arg value="../test/jseries.obj"/>
-			<arg value="../test/welp.png"/>
+			<arg value="../test/jseries.png"/>
 		</java>
 	</target>
 </project>
