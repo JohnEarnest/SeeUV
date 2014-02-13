@@ -7,6 +7,6 @@ To compile, use the provided ant script. A platform independent JAR will be depo
 
 SeeUV can be run from the command line like so:
 
-  java -jar SeeUV.jar <model.obj> <texture.png>
+    java -jar SeeUV.jar <model.obj> <texture.png>
 
 This tool is still under development, so expect some bugs and instability.
