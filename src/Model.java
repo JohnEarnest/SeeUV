@@ -2,13 +2,19 @@ import java.nio.*;
 import java.io.*;
 import java.util.*;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+
 public class Model {
 
-	public static FloatBuffer load(String filename) throws FileNotFoundException {
+	public final List<Vertex>   vertices  = new ArrayList<Vertex>();
+	public final List<Texture>  textures  = new ArrayList<Texture>();
+	public final List<Triangle> triangles = new ArrayList<Triangle>();
+
+	public Model(String filename) throws FileNotFoundException {
 		Scanner in = new Scanner(new File(filename));
-		List<Vertex>  vertices = new ArrayList<Vertex>();
-		List<Texture> textures = new ArrayList<Texture>();
-		List<Face>    faces    = new ArrayList<Face>();
 	
 		while(in.hasNextLine()) {
 			final Scanner line = new Scanner(in.nextLine());
@@ -28,48 +34,64 @@ public class Model {
 				));
 			}
 			if ("f".equals(command)) {
-				Face f = new Face();
-				faces.add(f);
-				for(int z = 0; z < 4; z++) {
+				// triangulate faces as necessary:
+				List<int[]> corners = new ArrayList<int[]>();
+				while(line.hasNext()) {
 					String[] pair = line.next().split("/");
-					f.vertices[z] = Integer.parseInt(pair[0]) - 1;
-					f.textures[z] = Integer.parseInt(pair[1]) - 1;
+					corners.add(new int[] {
+						Integer.parseInt(pair[0]) - 1,
+						Integer.parseInt(pair[1]) - 1
+					});
+				}
+				for(int z = 1; z < corners.size()-1; z++) {
+					triangles.add(new Triangle(
+						new Vertex [] {
+							vertices.get(corners.get(0)  [0]),
+							vertices.get(corners.get(z)  [0]),
+							vertices.get(corners.get(z+1)[0])
+						},
+						new Texture [] {
+							textures.get(corners.get(0)  [1]),
+							textures.get(corners.get(z)  [1]),
+							textures.get(corners.get(z+1)[1])
+						}
+					));
 				}
 			}
 		}
+	}
 
-		FloatBuffer ret = FloatBuffer.allocate(faces.size() * 4 * 5);
-		for(int z = 0; z < faces.size(); z++) {
-			Face f = faces.get(z);
-			for(int i = 0; i < 4; i++) {
-				Vertex  v = vertices.get(f.vertices[i]);
-				Texture t = textures.get(f.textures[i]);
-				int base = (z * 4 * 5) + (i * 5);
-				ret.put(base,   v.x);
-				ret.put(base+1, v.y);
-				ret.put(base+2, v.z);
-				ret.put(base+3, t.u);
-				ret.put(base+4, t.v);
+	public void center() {
+		float[] min = new float[] {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
+		float[] max = new float[] {Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
+		for(Vertex v : vertices) {
+			for(int a = 0; a < 3; a++) {
+				min[a] = Math.min(min[a], v.data[a]);
+				max[a] = Math.max(max[a], v.data[a]);
 			}
 		}
-		return ret;
-	}
-
-	private static class Vertex {
-		final float x;
-		final float y;
-		final float z;
-
-		Vertex(float x, float y, float z) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
+		float[] avg = new float[3];
+		for(int a = 0; a < 3; a++) {
+			avg[a] = min[a] + (max[a] - min[a])/2;
+		}
+		for(Vertex v : vertices) {
+			for(int a = 0; a < 3; a++) {
+				v.data[a] -= avg[a];
+			}
 		}
 	}
 
-	private static class Texture {
-		final float u;
-		final float v;
+	static class Vertex {
+		float[] data;
+
+		Vertex(float... data) {
+			this.data = data;
+		}
+	}
+
+	static class Texture {
+		float u;
+		float v;
 
 		Texture(float u, float v) {
 			this.u = u;
@@ -77,8 +99,13 @@ public class Model {
 		}
 	}
 
-	private static class Face {
-		final int[] vertices = new int[4];
-		final int[] textures = new int[4];
+	static class Triangle {
+		final Vertex [] vertices;
+		final Texture[] textures;
+
+		Triangle(Vertex[] vertices, Texture[] textures) {
+			this.vertices = vertices;
+			this.textures = textures;
+		}
 	}
 }

@@ -7,8 +7,6 @@
 	<target name="compile" depends="clean">
 		<mkdir dir="build"/>
 		<javac
-			source="1.5"
-			target="1.5"
 			srcdir="src/"
 			destdir="build"
 			debug="on"
@@ -20,7 +18,6 @@
 				<pathelement location="lib/lwjgl.jar"/>
 			</classpath>
 			<compilerarg value="-Xlint:-serial"/>
-			<compilerarg value="-Xbootclasspath:/res/1.5/rt.jar"/>
 		</javac>
 		<mkdir dir="dist"/>
 		<jar destfile="dist/SeeUV.jar">
@@ -42,6 +39,8 @@
 			<classpath>
 				<pathelement location="dist/SeeUV.jar"/>
 			</classpath>
+			<arg value="../test/jseries.obj"/>
+			<arg value="../test/welp.png"/>
 		</java>
 	</target>
 </project>
