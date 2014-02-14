@@ -18,11 +18,11 @@ public class SeeUV {
 		Display.setDisplayMode(new DisplayMode(640, 480));
 		Display.create();
 
+		setup();
 		model   = new Model(args[0]);
 		texture = new Texture(args[1]);
 		Display.setTitle("SeeUV - " + model.file.getName());
 
-		setup();
 		long lastframe = (System.nanoTime() / 1000000);
 		while(!Display.isCloseRequested()) {
 			long thisframe = (System.nanoTime() / 1000000);
@@ -60,6 +60,8 @@ public class SeeUV {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+		glActiveTexture(GL_TEXTURE0);
+		glEnable(GL_TEXTURE_2D);
 	}
 
 	static void tick(int delta) {
@@ -90,9 +92,7 @@ public class SeeUV {
 
 	static void draw() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture.id);
-		glEnable(GL_TEXTURE_2D);
 
 		glPushMatrix();
 		glTranslatef(320, 240, 0);
@@ -111,6 +111,5 @@ public class SeeUV {
 		}
 		glEnd();
 		glPopMatrix();
-		glDisable(GL_TEXTURE_2D);
 	}
 }
