@@ -16,6 +16,7 @@
 		>
 			<classpath>
 				<pathelement location="lib/lwjgl.jar"/>
+				<pathelement location="lib/JSAP-2.1.jar"/>
 			</classpath>
 			<compilerarg value="-Xlint:-serial"/>
 		</javac>
@@ -23,6 +24,7 @@
 		<jar destfile="dist/SeeUV.jar">
 			<fileset    dir="build/" />
 			<zipfileset src="lib/lwjgl.jar" />
+			<zipfileset src="lib/JSAP-2.1.jar" />
 			<manifest>
 				<attribute name="Main-Class" value="SeeUV"/>
 			</manifest>

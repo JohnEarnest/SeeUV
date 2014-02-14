@@ -1,3 +1,4 @@
+import com.martiansoftware.jsap.*;
 import java.io.*;
 import java.nio.*;
 import org.lwjgl.*;
@@ -10,33 +11,39 @@ import static org.lwjgl.opengl.GL15.*;
 public class SeeUV {
 
 	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.out.println("usage: seeuv <model> <texture>");
-			System.exit(0);
-		}
 		System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
-		Display.setDisplayMode(new DisplayMode(640, 480));
-		Display.create();
+		SimpleJSAP jsap = new SimpleJSAP(
+			"seeuv",
+			"A dynamic model and texture preview tool.",
+			new Parameter[] {
+				new FlaggedOption("window x",      JSAP.INTEGER_PARSER, "-1",  false, 'x', JSAP.NO_LONGFLAG),
+				new FlaggedOption("window y",      JSAP.INTEGER_PARSER, "-1",  false, 'y', JSAP.NO_LONGFLAG),
+				new FlaggedOption("window width",  JSAP.INTEGER_PARSER, "640", false, 'w', JSAP.NO_LONGFLAG),
+				new FlaggedOption("window height", JSAP.INTEGER_PARSER, "480", false, 'h', JSAP.NO_LONGFLAG),
+				new UnflaggedOption("model",   JSAP.STRING_PARSER, true, "An OBJ model file"),
+				new UnflaggedOption("texture", JSAP.STRING_PARSER, true, "A PNG, JPEG, GIF or BMP texture file")
+			}
+		);
+		JSAPResult config = jsap.parse(args);
+		if (jsap.messagePrinted()) {
+			System.exit(1);
+		}
+
 		Display.setResizable(true);
+		Display.setDisplayMode(new DisplayMode(
+			config.getInt("window width"),
+			config.getInt("window height")
+		));
+		Display.setLocation(
+			config.getInt("window x"),
+			config.getInt("window y")
+		);
+		Display.create();
 
 		setup();
-		model   = new Model(args[0]);
-		texture = new Texture(args[1]);
-		Display.setTitle("SeeUV - " + model.file.getName());
-
-		long lastframe = (System.nanoTime() / 1000000);
-		while(!Display.isCloseRequested()) {
-			long thisframe = (System.nanoTime() / 1000000);
-			tick((int)(thisframe - lastframe));
-			draw();
-			lastframe = thisframe;
-			Display.update();
-			texture.poll();
-			model.poll();
-			Display.sync(60);
-		}
-		Display.destroy();
-		System.exit(0);
+		model   = new Model(config.getString("model"));
+		texture = new Texture(config.getString("texture"));
+		game();
 	}
 
 	static float hrot = 0;
@@ -59,6 +66,23 @@ public class SeeUV {
 		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
 		glActiveTexture(GL_TEXTURE0);
 		glEnable(GL_TEXTURE_2D);
+	}
+
+	static void game() {
+		Display.setTitle("SeeUV - " + model.file.getName());
+		long lastframe = (System.nanoTime() / 1000000);
+		while(!Display.isCloseRequested()) {
+			long thisframe = (System.nanoTime() / 1000000);
+			tick((int)(thisframe - lastframe));
+			draw();
+			lastframe = thisframe;
+			Display.update();
+			texture.poll();
+			model.poll();
+			Display.sync(60);
+		}
+		Display.destroy();
+		System.exit(0);
 	}
 
 	static void tick(int delta) {
