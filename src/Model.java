@@ -7,15 +7,27 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
-public class Model {
+public class Model extends Resource {
 
-	public final List<Vertex>   vertices  = new ArrayList<Vertex>();
-	public final List<Texture>  textures  = new ArrayList<Texture>();
-	public final List<Triangle> triangles = new ArrayList<Triangle>();
+	public List<Vertex>   vertices;
+	public List<Texture>  textures;
+	public List<Triangle> triangles;
 
-	public Model(String filename) throws FileNotFoundException {
-		Scanner in = new Scanner(new File(filename));
-	
+	public Model(String filename) {
+		super(filename);
+	}
+
+	protected void load() {
+		Scanner in = null;
+		try { in = new Scanner(file); }
+		catch(FileNotFoundException e) { e.printStackTrace(); System.exit(0); }
+
+		if (vertices == null) {
+			vertices = new ArrayList<Vertex>();
+			textures = new ArrayList<Texture>();
+			triangles = new ArrayList<Triangle>();
+		}
+
 		while(in.hasNextLine()) {
 			final Scanner line = new Scanner(in.nextLine());
 			final String command = line.next();
@@ -59,9 +71,18 @@ public class Model {
 				}
 			}
 		}
+		center();
+
+		System.out.format("loaded model '%s'%n", file);
 	}
 
-	public void center() {
+	public void free() {
+		vertices.clear();
+		textures.clear();
+		triangles.clear();
+	}
+
+	private void center() {
 		float[] min = new float[] {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
 		float[] max = new float[] {Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE};
 		for(Vertex v : vertices) {

@@ -14,15 +14,14 @@ public class SeeUV {
 			System.out.println("usage: seeuv <model> <texture>");
 			System.exit(0);
 		}
-		modelName   = args[0];
-		textureName = args[1];
-
 		System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
 		Display.setDisplayMode(new DisplayMode(640, 480));
-		Display.setTitle("SeeUV - " + new File(modelName).getName());
 		Display.create();
-		TextureWatcher w = new TextureWatcher(textureName);
-		w.start();
+
+		model   = new Model(args[0]);
+		texture = new Texture(args[1]);
+		Display.setTitle("SeeUV - " + model.file.getName());
+
 		setup();
 		long lastframe = (System.nanoTime() / 1000000);
 		while(!Display.isCloseRequested()) {
@@ -31,21 +30,20 @@ public class SeeUV {
 			draw();
 			lastframe = thisframe;
 			Display.update();
+			texture.poll();
+			model.poll();
 			Display.sync(60);
 		}
 		Display.destroy();
 		System.exit(0);
 	}
 
-	static String modelName;
-	static String textureName;
-	static volatile boolean reloadTexture = false;
-
 	static float hrot = 0;
 	static float vrot = 0;
 	static float scale = 150;
-	static int textureid  = 0;
-	static Model model = null;
+
+	static Texture texture;
+	static Model model;
 
 	static float rx = 0;
 	static float ry = 0;
@@ -62,15 +60,6 @@ public class SeeUV {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-
-		try {
-			textureid = Texture.load(textureName);
-			model = new Model(modelName);
-			model.center();
-		}
-		catch(IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	static void tick(int delta) {
@@ -100,21 +89,9 @@ public class SeeUV {
 	}
 
 	static void draw() {
-		if (reloadTexture) {
-			try {
-				int oldTexture = textureid;
-				SeeUV.textureid = Texture.load(textureName);
-				glDeleteTextures(oldTexture);
-			}
-			catch(IOException e) {
-				e.printStackTrace();
-			}
-			reloadTexture = false;
-		}
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureid);
+		glBindTexture(GL_TEXTURE_2D, texture.id);
 		glEnable(GL_TEXTURE_2D);
 
 		glPushMatrix();
@@ -135,27 +112,5 @@ public class SeeUV {
 		glEnd();
 		glPopMatrix();
 		glDisable(GL_TEXTURE_2D);
-	}
-}
-
-class TextureWatcher extends Thread {
-	final String filename;
-	long lastModified;
-
-	TextureWatcher(String filename) {
-		this.filename = filename;
-		this.lastModified = new File(filename).lastModified();
-	}
-
-	public void run() {
-		while(true) {
-			try { Thread.sleep(1000); }
-			catch(InterruptedException e) {}
-			long now = new File(filename).lastModified();
-			if (now == lastModified) { continue; }
-			lastModified = now;
-			SeeUV.reloadTexture = true;
-			System.out.println("updated texture.");
-		}
 	}
 }

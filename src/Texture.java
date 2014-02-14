@@ -7,10 +7,18 @@ import javax.imageio.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture {
+public class Texture extends Resource {
 
-	public static int load(String filename) throws IOException {
-		BufferedImage texture = ImageIO.read(new File(filename));
+	public BufferedImage texture;
+	public int id;
+
+	public Texture(String filename) {
+		super(filename);
+	}
+
+	protected void load() {
+		try { texture = ImageIO.read(file); }
+		catch(IOException e) { e.printStackTrace(); System.exit(0); }
 
 		int w = texture.getWidth();
 		int h = texture.getHeight();
@@ -21,9 +29,9 @@ public class Texture {
 			buffer.put(z, (byte)(data[z]));
 		}
 
-		int ret = glGenTextures();
+		id = glGenTextures();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, ret);
+		glBindTexture(GL_TEXTURE_2D, id);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -32,6 +40,10 @@ public class Texture {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		return ret;
+		System.out.format("loaded texture '%s'%n", file);
+	}
+
+	protected void free() {
+		glDeleteTextures(id);
 	}
 }
