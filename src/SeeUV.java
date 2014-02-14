@@ -17,6 +17,7 @@ public class SeeUV {
 		System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
 		Display.setDisplayMode(new DisplayMode(640, 480));
 		Display.create();
+		Display.setResizable(true);
 
 		setup();
 		model   = new Model(args[0]);
@@ -52,10 +53,6 @@ public class SeeUV {
 	static boolean dragging;
 
 	static void setup() {
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, 640, 0, 480, 400, -400);
-		glMatrixMode(GL_MODELVIEW);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -91,11 +88,18 @@ public class SeeUV {
 	}
 
 	static void draw() {
+		int w = Display.getWidth();
+		int h = Display.getHeight();
+		glViewport(0, 0, w, h);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, w, 0, h, 400, -400);
+		glMatrixMode(GL_MODELVIEW);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture.id);
 
 		glPushMatrix();
-		glTranslatef(320, 240, 0);
+		glTranslatef(w/2, h/2, 0);
 		glScalef(scale, scale, scale);
 		glRotatef(hrot + rx, 0, 1, 0);
 		glRotatef(vrot + ry, 1, 0, 0);
