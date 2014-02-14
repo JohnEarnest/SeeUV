@@ -19,7 +19,7 @@ public class SeeUV {
 
 		System.setProperty("org.lwjgl.librarypath", new File("native").getAbsolutePath());
 		Display.setDisplayMode(new DisplayMode(640, 480));
-		Display.setTitle("SeeUV");
+		Display.setTitle("SeeUV - " + new File(modelName).getName());
 		Display.create();
 		TextureWatcher w = new TextureWatcher(textureName);
 		w.start();
