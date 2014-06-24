@@ -25,6 +25,7 @@ public class Model extends Resource {
 
 		while(in.hasNextLine()) {
 			final Scanner line = new Scanner(in.nextLine());
+			if (!line.hasNext()) { continue; }
 			final String command = line.next();
 
 			if ("v".equals(command)) {
@@ -68,6 +69,7 @@ public class Model extends Resource {
 		}
 		center();
 
+		in.close();
 		System.out.format("loaded model '%s'%n", file);
 	}
 

@@ -24,12 +24,7 @@ public class Quaternion {
 	}
 
 	public float length() {
-		return (float)Math.sqrt(
-			(w * w) +
-			(x * x) +
-			(y * y) +
-			(z * z)
-		);
+		return (float)Math.sqrt(dot(this));
 	}
 
 	public Quaternion normalize() {
