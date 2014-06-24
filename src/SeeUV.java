@@ -46,18 +46,16 @@ public class SeeUV {
 		game();
 	}
 
-	static float hrot = 0;
-	static float vrot = 0;
-	static float scale = 150;
-
 	static Texture texture;
 	static Model model;
+	static float scale = 150;
+	static Quaternion rotation = Quaternion.IDENTITY;
 
-	static float rx = 0;
-	static float ry = 0;
-	static int dx = 0;
-	static int dy = 0;
-	static boolean dragging;
+	static boolean dragging = false;
+	static Vector3 dragStart    = Vector3.ZERO;        // starting position of drag
+	static Vector3 dragHere     = Vector3.ZERO;        // current position
+	static Quaternion quatStart = Quaternion.IDENTITY; // starting rotation of drag
+	static Quaternion quatHere  = Quaternion.IDENTITY; // current rotation
 
 	static void setup() {
 		glEnable(GL_DEPTH_TEST);
@@ -88,27 +86,50 @@ public class SeeUV {
 	static void tick(int delta) {
 		if (Mouse.isButtonDown(0)) {
 			if (dragging) {
-				rx = (float)((dx - Mouse.getX()) * 0.5);
-				ry = (float)((dy - Mouse.getY()) * 0.5);
+				// mouseDrag:
+				dragHere = mouseToSphere();      // new ending position
+				quatHere = new Quaternion(
+					dragStart.dot  (dragHere),   // angle between position vectors
+					dragStart.cross(dragHere)    // normal of position vectors
+				);
 			}
 			else {
+				// mouseDown:
 				dragging = true;
-				dx = Mouse.getX();
-				dy = Mouse.getY();
+				dragStart = mouseToSphere();     // new starting position
+				quatStart = rotation;            // rotation starts at previous computed rotation
+				quatHere  = Quaternion.IDENTITY; // no rotation so far
 			}
 		}
 		else {
 			if (dragging) {
+				// mouseUp:
 				dragging = false;
-				hrot = (hrot + rx) % 360;
-				vrot = (vrot + ry) % 360;
-				rx = 0;
-				ry = 0;
 			}
 		}
+
 		scale += Mouse.getDWheel();
 		if (scale <   10) { scale =   10; }
 		if (scale > 1000) { scale = 1000; }
+		rotation = quatHere.mul(quatStart).normalize();
+	}
+
+	static Vector3 mouseToSphere() {
+		Vector3 centered = new Vector3(
+			(Mouse.getX() - (Display.getWidth() /2)) / 600.0f,
+			(Mouse.getY() - (Display.getHeight()/2)) / 600.0f,
+			0
+		);
+		float length = centered.length();
+		if (length > 1.0) { return centered.normalize(); }
+
+		return new Vector3(
+			centered.x,
+			centered.y,
+			// this produces a hyperbolic dropoff
+			// which approximates the curve of a sphere:
+			(float)Math.sqrt(1 - length)
+		);
 	}
 
 	static void draw() {
@@ -125,8 +146,11 @@ public class SeeUV {
 		glPushMatrix();
 		glTranslatef(w/2, h/2, 0);
 		glScalef(scale, scale, scale);
-		glRotatef(hrot + rx, 0, 1, 0);
-		glRotatef(vrot + ry, 1, 0, 0);
+		Vector3 axis = rotation.axis();
+		glRotatef(
+			(float)Math.toDegrees(rotation.angle()),
+			axis.x, axis.y, axis.z
+		);
 
 		glBegin(GL_TRIANGLES);
 		for(Model.Triangle t : model.triangles) {
